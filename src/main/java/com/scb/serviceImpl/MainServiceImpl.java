@@ -22,18 +22,20 @@ public class MainServiceImpl implements MainService {
 
 	@Override
 	public boolean saveTrancation(PersistanceData persistdata) {
-		log.info("Transaction received: " + persistdata);
+		log.info("Received PersistanceData - TransactionID : " + persistdata.getTransactionID() + ", TransactionType : " + persistdata.getTransactionType() 
+		+ ", TransactionSubType : " + persistdata.getTransactionSubType() + ", payloadFormat : " + persistdata.getPayloadFormat());
 		List<PersistanceData> persistDataVar = null;
 		try {
 			persistDataVar = persistancedatarepositary.findById(persistdata.getTransactionID());
 		} catch (NoSuchElementException ex) {
 			log.info("Error in finding transaction" + ex.getMessage());
 		}
-		if (persistDataVar != null) {
+		if (persistDataVar != null && persistDataVar.size() > 0) {
+			log.info("Transaction Id : " + persistdata.getTransactionID() + " exists already.");
 			return false;
 		} else {
 			log.info("Transaction deatils being saved in db");
-			int count=persistancedatarepositary.findAll().size();
+			//int count=persistancedatarepositary.findAll().size();
 			//PersistanceDataCompositeKey pCompositeKey=persistdata.getPersistanceDataCompositeKey();
 			//pCompositeKey.setReferenceId(count);
 			//persistdata.setPersistanceDataCompositeKey(pCompositeKey);

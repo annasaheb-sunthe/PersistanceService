@@ -2,13 +2,11 @@ package com.scb.model;
 
 import java.io.Serializable;
 
-import javax.persistence.EmbeddedId;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.xml.bind.annotation.XmlRootElement;
-
-import com.scb.model.compositekey.PersistanceDataCompositeKey;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -26,11 +24,17 @@ public class PersistanceData implements Serializable{
 //	private  PersistanceDataCompositeKey persistanceDataCompositeKey;
 	@Id
 	private long transactionID;
+	@Column
 	private String transactionType;
+	@Column
 	private String transactionSubType;
+	@Column
 	private String payloadFormat;
+	@Column (length = 100000)
 	private String payload;
+	@Column
 	private String createdOn;
+	@Column
 	private String updatedOn;
 	
 }

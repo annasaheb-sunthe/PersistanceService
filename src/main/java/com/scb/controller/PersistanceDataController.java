@@ -15,10 +15,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.scb.model.AuditLog;
 import com.scb.model.PersistanceData;
 import com.scb.model.ResponseMessage;
 import com.scb.persistence.util.ReceiverConstants;
+import com.scb.persistence.util.ServiceUtil;
 import com.scb.service.MainService;
+import com.scb.serviceImpl.InternalApiInvoker;
 
 import lombok.extern.log4j.Log4j2;
 
@@ -30,18 +33,36 @@ import lombok.extern.log4j.Log4j2;
 public class PersistanceDataController {
 	@Autowired
 	private MainService mainservice;
-
+	
+	@Autowired
+	private ServiceUtil commonMethods;
+	
+	@Autowired
+	private InternalApiInvoker internalApiInvoker;
+	
 	@PostMapping("/addPayload")
 	public ResponseEntity<ResponseMessage> saveTransaction(@RequestBody PersistanceData persistancedata,
 			UriComponentsBuilder builder) {
-		log.info("Received PersistanceData : " + persistancedata);
+		log.info("Received PersistanceData - TransactionID : " + persistancedata.getTransactionID() + ", TransactionType : " + persistancedata.getTransactionType() 
+			+ ", TransactionSubType : " + persistancedata.getTransactionSubType() + ", payloadFormat : " + persistancedata.getPayloadFormat());
+		AuditLog auditLog = commonMethods.getAuditLog(persistancedata, "INITIATED", "Request persistence initiated");
+		ResponseEntity<AuditLog> responseAuditLog = internalApiInvoker.auditLogApiCall(auditLog);
+		
 		boolean flag = mainservice.saveTrancation(persistancedata);
 		/*if (flag == false) {
 			return new ResponseEntity<ResponseMessage>(HttpStatus.CONFLICT);
 		}*/
 		//HttpHeaders headers = new HttpHeaders();
 		//headers.setLocation(builder.path("/PersistanceData/{id}").buildAndExpand(persistancedata).toUri());
+		if (!flag) {
+			auditLog = commonMethods.getAuditLog(persistancedata, "FAILED", "Failed to store request data");
+		} else {
+			auditLog = commonMethods.getAuditLog(persistancedata, "COMPLETED", "Request data stored successfully");
+		}
+		
+		responseAuditLog = internalApiInvoker.auditLogApiCall(auditLog);
 		ResponseMessage rm = new ResponseMessage().builder().responseCode(201).responseMessage("Successfully created").build();
+		
 		return new ResponseEntity<ResponseMessage>(rm, HttpStatus.CREATED);
 	}
 
